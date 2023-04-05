@@ -1,0 +1,100 @@
+---
+title: "Assignment 7 Dynamic Report"
+author: "Santiago Charry"
+format: html
+editor: visual
+---
+
+```{r include=FALSE}
+#| echo: false
+#Library loading and data setup
+library(tidyverse)
+library(data.table) ## For the fread function
+library(lubridate)
+
+source("sepsis_monitor_functions.R")
+
+library(googledrive)
+library(gt)
+
+drive_deauth()
+file_link <- "https://drive.google.com/file/d/1KFeLNJIPAc8oCrmZDsRNR6yjdru01xpp/view?usp=share_link"
+
+## All data up until now
+new_data <- updateData(file_link)
+
+## Include only most recent data
+most_recent_data <- new_data %>%
+  group_by(PatientID) %>%
+  filter(obsTime == max(obsTime))
+```
+
+## This report was created at `r Sys.time()`
+
+## Table of All Patients Vital Changes in Their Latest Hour
+
+Change in vitals over each patient's latest hour.
+
+```{r, echo = FALSE}
+#| echo: false 
+new_data <- updateData(file_link)
+
+# Subsetting the latest two observations for each subject using ICULOS
+last_two_obs_by_patient <- new_data %>%
+  group_by(PatientID) %>%
+  arrange(desc(ICULOS)) %>%
+  slice(1:2)
+
+# Calculating change in vitals
+change_in_vitals <- last_two_obs_by_patient %>%
+  group_by(PatientID) %>%
+  summarize(
+    HR_Change = HR[2] - HR[1],
+    Temp_Change = Temp[2] - Temp[1],
+    Resp_Change = Resp[2] - Resp[1]
+  )
+
+gt(change_in_vitals)
+
+```
+
+## Table of Current Sepsis Patients + Vitals
+
+Patients who currently have sepsis along with current heart rate, temperature, and respiratory rate.
+
+```{r, echo = FALSE}
+#| echo: false
+
+septic_patients <- most_recent_data %>%
+  group_by(PatientID) %>%
+  filter(SepsisLabel == 0) %>%
+  summarize(HR, Temp, Resp)
+
+gt(septic_patients)
+
+```
+
+## Plots for septic patients with history of vitals
+
+Spaghetti plots depicting change in vitals for septic patients throughout their stay at the ICU (in hours). 
+
+```{r, echo = FALSE}
+#| echo: false
+new_data %>%
+  filter(SepsisLabel == 0) %>%
+  ggplot(aes(x = ICULOS, y = HR, color = PatientID)) +
+    geom_line() +
+    labs(x = "ICU Length of Stay", y = "Heart Rate", title = "Spaghetti Plot for Heart Rate")
+
+new_data %>%
+  filter(SepsisLabel == 0) %>%
+  ggplot(aes(x = ICULOS, y = Temp, color = PatientID)) +
+    geom_line() +
+    labs(x = "ICU Length of Stay", y = "Temperature", title = "Spaghetti Plot for Temperature")
+
+new_data %>%
+  filter(SepsisLabel == 0) %>%
+  ggplot(aes(x = ICULOS, y = Resp, color = PatientID)) +
+    geom_line() +
+    labs(x = "ICU Length of Stay", y = "Respiratory Rate", title = "Spaghetti Plot for Respiratory Rate")
+```
