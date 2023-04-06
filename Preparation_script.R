@@ -34,3 +34,4 @@ new_data <- updateData(file_link)
 most_recent_data <- new_data %>%
   group_by(PatientID) %>%
   filter(obsTime == max(obsTime))
+
