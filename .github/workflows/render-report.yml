@@ -4,20 +4,60 @@ on:
     # set the interval to render the report
     - cron: "0 * * * *"
   workflow_dispatch:
-  
+on:
+  push:
+    branches: main
+  workflow_dispatch:
+
 jobs:
-  render-report:
+  build-deploy:
     runs-on: ubuntu-latest
+    
+    permissions:
+        contents: write
+        
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Install dependencies
-        run: |
-          Rscript -e 'install.packages(c("tidyverse", "data.table", "lubridate", "googledrive", "gt"))'
-      - name: Render report
-        run: Rscript -e 'rmarkdown::render("assignment7_dynamic_report.qmd")'
-      - name: Upload report
-        uses: actions/upload-artifact@v2
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
         with:
-          name: report
-          path: assignment7_dynamic_report.html
+          r-version: '4.2.0' # The R version to download (if necessary) and use.
+ 
+      - name: Install packages
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+            packages:
+               any::knitr
+               any::rmarkdown
+               any::jsonlite
+               any::dplyr
+               any::ggplot2
+               any::readr
+               any::lubridate
+               any::forcats
+               any::tidyverse
+               any::data.table
+               any::googledrive
+               any::gt
+
+      - name: Render document
+        uses: quarto-dev/quarto-actions/render@v2
+        with:
+          to: gfm
+          path: Assignment7_Report.qmd
+
+      - name: Setup git config
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+
+      - name: Commit
+        run: |
+          git add .
+          git commit -m "Updated report"
+          git push origin main
