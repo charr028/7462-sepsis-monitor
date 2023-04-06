@@ -1,0 +1,23 @@
+name: Render Report
+on:
+  schedule:
+    # set the interval to render the report
+    - cron: "0 * * * *"
+  workflow_dispatch:
+  
+jobs:
+  render-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          Rscript -e 'install.packages(c("tidyverse", "data.table", "lubridate", "googledrive", "gt"))'
+      - name: Render report
+        run: Rscript -e 'rmarkdown::render("assignment7_dynamic_report.qmd")'
+      - name: Upload report
+        uses: actions/upload-artifact@v2
+        with:
+          name: report
+          path: assignment7_dynamic_report.html
