@@ -67,7 +67,7 @@ Patients who currently have sepsis along with current heart rate, temperature, a
 
 septic_patients <- most_recent_data %>%
   group_by(PatientID) %>%
-  filter(SepsisLabel == 0) %>%
+  filter(SepsisLabel == 1) %>%
   summarize(HR, Temp, Resp)
 
 gt(septic_patients)
@@ -81,19 +81,19 @@ Spaghetti plots depicting change in vitals for septic patients throughout their 
 ```{r, echo = FALSE}
 #| echo: false
 new_data %>%
-  filter(SepsisLabel == 0) %>%
+  filter(SepsisLabel == 1) %>%
   ggplot(aes(x = ICULOS, y = HR, color = PatientID)) +
     geom_line() +
     labs(x = "ICU Length of Stay", y = "Heart Rate", title = "Spaghetti Plot for Heart Rate")
 
 new_data %>%
-  filter(SepsisLabel == 0) %>%
+  filter(SepsisLabel == 1) %>%
   ggplot(aes(x = ICULOS, y = Temp, color = PatientID)) +
     geom_line() +
     labs(x = "ICU Length of Stay", y = "Temperature", title = "Spaghetti Plot for Temperature")
 
 new_data %>%
-  filter(SepsisLabel == 0) %>%
+  filter(SepsisLabel == 1) %>%
   ggplot(aes(x = ICULOS, y = Resp, color = PatientID)) +
     geom_line() +
     labs(x = "ICU Length of Stay", y = "Respiratory Rate", title = "Spaghetti Plot for Respiratory Rate")
